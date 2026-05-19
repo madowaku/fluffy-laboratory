@@ -1,4 +1,5 @@
 import type { GenerateCardInput, GeneratedCard, SeedType } from "@/types/seed";
+import { validateGeneratedCard } from "./generated-card-schema";
 import type { LLMProvider } from "./provider";
 
 const cardTypeTitles: Record<SeedType, string> = {
@@ -39,7 +40,7 @@ export class MockLLMProvider implements LLMProvider {
     const additionalInstruction = input.additionalInstruction?.trim();
     const title = cardTypeTitles[input.cardType];
 
-    return {
+    return validateGeneratedCard({
       title,
       type: input.cardType,
       summary: `${typeSummaries[input.cardType]} Source signal: ${cleanInput}`,
@@ -70,7 +71,7 @@ export class MockLLMProvider implements LLMProvider {
         "Rewrite the card in your own words.",
         "Add one observation that would weaken this seed."
       ]
-    };
+    });
   }
 }
 

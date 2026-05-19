@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { SeedCard } from "@/components/SeedCard";
 import { seedToMarkdown } from "@/lib/export/markdown";
-import { mockLLMProvider } from "@/lib/llm/mock-provider";
+import { createLLMProvider } from "@/lib/llm/factory";
 import {
   mergeStoredSeed,
   parseStoredSeeds,
@@ -46,6 +46,7 @@ export default function NewSeedPage() {
   const [tags, setTags] = useState("");
   const [additionalInstruction, setAdditionalInstruction] = useState("");
   const [preview, setPreview] = useState<Seed | null>(null);
+  const [generateError, setGenerateError] = useState("");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle"
   );
@@ -59,17 +60,27 @@ export default function NewSeedPage() {
   );
 
   async function handleGenerate() {
-    const generated = await mockLLMProvider.generateCard({
-      input,
-      cardType,
-      sourceUrl,
-      tags: parseTags(tags),
-      additionalInstruction
-    });
+    try {
+      const provider = createLLMProvider();
+      const generated = await provider.generateCard({
+        input,
+        cardType,
+        sourceUrl,
+        tags: parseTags(tags),
+        additionalInstruction
+      });
 
-    setPreview(toPreviewSeed(generated));
-    setCopyState("idle");
-    setSaveState("idle");
+      setPreview(toPreviewSeed(generated));
+      setGenerateError("");
+      setCopyState("idle");
+      setSaveState("idle");
+    } catch (error) {
+      setGenerateError(
+        error instanceof Error
+          ? error.message
+          : "Failed to generate a seed card."
+      );
+    }
   }
 
   function handleSaveLocal() {
@@ -115,7 +126,8 @@ export default function NewSeedPage() {
         </h1>
         <p className="mt-4 max-w-2xl leading-8 text-neutral-700">
           メモ、URL、論文末尾の疑問、日常の違和感を、まだ柔らかい
-          Seed cardとして仮置きします。Mock AIは外部送信しません。
+          Seed cardとして仮置きします。現在はprovider factory経由のMock
+          AIだけを使い、外部AI APIは呼びません。
         </p>
       </section>
 
@@ -191,6 +203,12 @@ export default function NewSeedPage() {
           >
             Generate with Mock AI
           </button>
+
+          {generateError ? (
+            <p className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              {generateError}
+            </p>
+          ) : null}
         </form>
 
         <aside className="space-y-4">
