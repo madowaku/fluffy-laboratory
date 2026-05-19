@@ -1,43 +1,77 @@
-import type { GenerateCardInput, GeneratedCard } from "@/types/seed";
+import type { GenerateCardInput, GeneratedCard, SeedType } from "@/types/seed";
 import type { LLMProvider } from "./provider";
+
+const cardTypeTitles: Record<SeedType, string> = {
+  hypothesis: "Hypothesis from a Soft Signal",
+  future_work_quest: "Future Work Quest from an Open Thread",
+  puzzle_seed: "Puzzle Seed from a Pattern",
+  observation: "Observation from a Small Strangeness",
+  note: "Loose Note for Later"
+};
+
+const typeSummaries: Record<SeedType, string> = {
+  hypothesis:
+    "A tentative hypothesis gathered from the submitted material. It is meant to invite observation, not settle the question.",
+  future_work_quest:
+    "A small quest shaped from an open question or limitation. It keeps the thread easy to pick up later.",
+  puzzle_seed:
+    "A puzzle-like seed drawn from the input, with just enough structure for a person to start playing with it.",
+  observation:
+    "A quiet observation card that preserves the texture of the original noticing before turning it into a claim.",
+  note: "A loose research note that keeps the input available for later sorting."
+};
+
+function excerpt(value: string) {
+  const normalized = value.trim().replace(/\s+/g, " ");
+  if (!normalized) {
+    return "No input was provided yet.";
+  }
+
+  return normalized.length > 180
+    ? `${normalized.slice(0, 177).trimEnd()}...`
+    : normalized;
+}
 
 export class MockLLMProvider implements LLMProvider {
   async generateCard(input: GenerateCardInput): Promise<GeneratedCard> {
-    const title =
-      input.cardType === "puzzle_seed"
-        ? "補題温室"
-        : input.cardType === "future_work_quest"
-          ? "長期効果反転クエスト"
-          : input.cardType === "observation"
-            ? "小さな違和感の標本"
-            : "未完成公開バイアス";
+    const cleanInput = excerpt(input.input);
+    const tags = input.tags?.length ? input.tags : ["fluffy", "seed"];
+    const additionalInstruction = input.additionalInstruction?.trim();
+    const title = cardTypeTitles[input.cardType];
 
     return {
       title,
       type: input.cardType,
-      summary:
-        "これはmock-providerが生成した仮のFluffy Seedです。入力から研究になる前の問いを拾う想定です。",
-      bodyMarkdown: `# ${title}
-
-## ひとことで
-研究になる前の問いを、ふわふわのまま保存するカードです。
-
-## 入力
-${input.input}
-
-## 危ない飛躍
-これは未検証の仮説です。確定した研究成果ではありません。
-
-## 次のアクション
-小さく観察・比較・反例探しを行う。
-`,
-      sourceUrl: input.sourceUrl,
+      summary: `${typeSummaries[input.cardType]} Source signal: ${cleanInput}`,
+      bodyMarkdown: [
+        `# ${title}`,
+        "",
+        "## Source Signal",
+        cleanInput,
+        "",
+        "## Mock Interpretation",
+        "This mock card preserves a possible research thread without claiming that the interpretation is true.",
+        "",
+        ...(additionalInstruction
+          ? ["## Additional Instruction", additionalInstruction, ""]
+          : []),
+        "## Tiny Next Move",
+        "Name one real-world example, one counterexample, and one thing that would make this seed less vague."
+      ].join("\n"),
+      sourceUrl: input.sourceUrl?.trim() || undefined,
       sourceTitle: undefined,
-      tags: input.tags ?? ["fluffy", "seed"],
+      tags,
       domains: ["human-research"],
       fluffLevel: 3,
-      riskNotes: ["未検証の仮説を含みます。"],
-      nextActions: ["1枚のカードとして保存し、あとで育てる。"]
+      riskNotes: [
+        "This is an unverified AI-generated draft. Treat it as a prompt for thinking, not as evidence or a conclusion."
+      ],
+      nextActions: [
+        "Rewrite the card in your own words.",
+        "Add one observation that would weaken this seed."
+      ]
     };
   }
 }
+
+export const mockLLMProvider = new MockLLMProvider();
