@@ -2,29 +2,31 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { SeedCard } from "@/components/SeedCard";
-import { filterSeeds, type SeedFilters } from "@/lib/seeds/filter";
 import {
-  parseStoredSeeds,
-  savedSeedsStorageKey
-} from "@/lib/seeds/storage";
+  EmptyState,
+  FieldLabel,
+  SectionTitle
+} from "@/components/Workbench";
+import { filterSeeds, type SeedFilters } from "@/lib/seeds/filter";
+import { parseStoredSeeds, savedSeedsStorageKey } from "@/lib/seeds/storage";
 import type { FluffLevel, Seed, SeedType } from "@/types/seed";
 
 const typeOptions: Array<{ value: "all" | SeedType; label: string }> = [
-  { value: "all", label: "All types" },
-  { value: "hypothesis", label: "Hypothesis" },
-  { value: "future_work_quest", label: "Future Work Quest" },
-  { value: "puzzle_seed", label: "Puzzle Seed" },
-  { value: "observation", label: "Observation" },
-  { value: "note", label: "Note" }
+  { value: "all", label: "すべての種別" },
+  { value: "hypothesis", label: "仮説" },
+  { value: "future_work_quest", label: "未回収課題" },
+  { value: "puzzle_seed", label: "パズルの種" },
+  { value: "observation", label: "観察" },
+  { value: "note", label: "メモ" }
 ];
 
 const fluffOptions: Array<{ value: "all" | FluffLevel; label: string }> = [
-  { value: "all", label: "All fluff levels" },
-  { value: 1, label: "Fluff 1" },
-  { value: 2, label: "Fluff 2" },
-  { value: 3, label: "Fluff 3" },
-  { value: 4, label: "Fluff 4" },
-  { value: 5, label: "Fluff 5" }
+  { value: "all", label: "すべての綿毛レベル" },
+  { value: 1, label: "綿毛レベル 1" },
+  { value: 2, label: "綿毛レベル 2" },
+  { value: 3, label: "綿毛レベル 3" },
+  { value: 4, label: "綿毛レベル 4" },
+  { value: 5, label: "綿毛レベル 5" }
 ];
 
 export function SeedLibrary({ initialSeeds }: { initialSeeds: Seed[] }) {
@@ -46,79 +48,89 @@ export function SeedLibrary({ initialSeeds }: { initialSeeds: Seed[] }) {
       ...initialSeeds.filter((seed) => !storedIds.has(seed.id))
     ];
   }, [initialSeeds, storedSeeds]);
-  const visibleSeeds = useMemo(() => filterSeeds(seeds, filters), [filters, seeds]);
+  const visibleSeeds = useMemo(
+    () => filterSeeds(seeds, filters),
+    [filters, seeds]
+  );
+
+  const inputClass =
+    "mt-1 w-full rounded-md border border-neutral-300 bg-white p-2 text-sm transition focus:border-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f7f2]";
 
   return (
     <section className="mt-10">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold text-neutral-950">
-            Recent Seeds
-          </h2>
+          <SectionTitle eyebrow="Seed Library">最近の綿毛</SectionTitle>
           <p className="mt-1 text-sm text-neutral-500">
-            {visibleSeeds.length} shown / {seeds.length} total
+            {visibleSeeds.length}件 / 全{seeds.length}件
           </p>
         </div>
       </div>
 
-      <div className="mb-5 grid gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm md:grid-cols-3">
-        <label className="block">
-          <span className="text-xs font-medium text-neutral-600">Tag</span>
-          <input
-            className="mt-1 w-full rounded-md border border-neutral-300 p-2 text-sm"
-            placeholder="math, medical, ux..."
-            value={filters.tag}
-            onChange={(event) =>
-              setFilters((current) => ({ ...current, tag: event.target.value }))
-            }
-          />
-        </label>
+      <div className="mb-5 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+        <p className="mb-3 text-xs font-medium tracking-wide text-neutral-500">
+          標本棚フィルター
+        </p>
+        <div className="grid gap-3 md:grid-cols-3">
+          <label className="block">
+            <FieldLabel>タグ</FieldLabel>
+            <input
+              className={inputClass}
+              placeholder="math, 医療, ux..."
+              value={filters.tag}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  tag: event.target.value
+                }))
+              }
+            />
+          </label>
 
-        <label className="block">
-          <span className="text-xs font-medium text-neutral-600">Type</span>
-          <select
-            className="mt-1 w-full rounded-md border border-neutral-300 p-2 text-sm"
-            value={filters.type}
-            onChange={(event) =>
-              setFilters((current) => ({
-                ...current,
-                type: event.target.value as SeedFilters["type"]
-              }))
-            }
-          >
-            {typeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label className="block">
+            <FieldLabel>種別</FieldLabel>
+            <select
+              className={inputClass}
+              value={filters.type}
+              onChange={(event) =>
+                setFilters((current) => ({
+                  ...current,
+                  type: event.target.value as SeedFilters["type"]
+                }))
+              }
+            >
+              {typeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="block">
-          <span className="text-xs font-medium text-neutral-600">
-            Fluff Level
-          </span>
-          <select
-            className="mt-1 w-full rounded-md border border-neutral-300 p-2 text-sm"
-            value={filters.fluffLevel}
-            onChange={(event) => {
-              const value = event.target.value;
-              setFilters((current) => ({
-                ...current,
-                fluffLevel:
-                  value === "all"
-                    ? "all"
-                    : (Number(value) as SeedFilters["fluffLevel"])
-              }));
-            }}
-          >
-            {fluffOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label className="block">
+            <FieldLabel>綿毛レベル</FieldLabel>
+            <select
+              className={inputClass}
+              value={filters.fluffLevel}
+              onChange={(event) => {
+                const value = event.target.value;
+                setFilters((current) => ({
+                  ...current,
+                  fluffLevel:
+                    value === "all"
+                      ? "all"
+                      : (Number(value) as SeedFilters["fluffLevel"])
+                }));
+              }}
+            >
+              {fluffOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -128,9 +140,9 @@ export function SeedLibrary({ initialSeeds }: { initialSeeds: Seed[] }) {
       </div>
 
       {visibleSeeds.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-neutral-300 p-6 text-sm text-neutral-600">
-          No seeds match the current filters.
-        </p>
+        <EmptyState title="条件に合う綿毛はまだありません。">
+          タグ、種別、綿毛レベルを少しゆるめると、棚の奥から見つかるかもしれません。
+        </EmptyState>
       ) : null}
     </section>
   );

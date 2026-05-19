@@ -1,9 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RiskNotes } from "@/components/RiskNotes";
-import { PageShell, Surface } from "@/components/Workbench";
+import {
+  FieldLabel,
+  GhostLink,
+  PageShell,
+  Surface
+} from "@/components/Workbench";
 import { seedToMarkdown } from "@/lib/export/markdown";
 import {
   findSeedById,
@@ -24,6 +28,14 @@ type EditFields = Pick<
   | "riskNotes"
   | "nextActions"
 >;
+
+const typeLabels: Record<Seed["type"], string> = {
+  hypothesis: "仮説",
+  future_work_quest: "未回収課題",
+  puzzle_seed: "パズルの種",
+  observation: "観察",
+  note: "メモ"
+};
 
 function joinLines(items: string[]) {
   return items.join("\n");
@@ -156,28 +168,30 @@ export function SeedDetailClient({
     }
   }
 
+  const inputClass =
+    "mt-1 w-full rounded-md border border-neutral-300 p-3 text-sm transition focus:border-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f7f2]";
+  const buttonClass =
+    "rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f7f2]";
+
   if (notFound) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10">
-        <Link href="/" className="text-sm text-neutral-600">
-          Back to library
-        </Link>
+      <PageShell>
+        <GhostLink href="/">標本棚へ戻る</GhostLink>
         <h1 className="mt-6 text-3xl font-semibold text-neutral-950">
-          Seed not found
+          綿毛が見つかりません
         </h1>
         <p className="mt-3 text-neutral-700">
-          This seed may only exist in another browser, or it may have been
-          removed from local storage.
+          この綿毛は別のブラウザにだけ保存されているか、localStorageから削除された可能性があります。
         </p>
-      </main>
+      </PageShell>
     );
   }
 
   if (!seed) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-10 text-sm text-neutral-600">
-        Loading seed...
-      </main>
+      <PageShell>
+        <p className="text-sm text-neutral-600">綿毛を探しています...</p>
+      </PageShell>
     );
   }
 
@@ -185,11 +199,9 @@ export function SeedDetailClient({
     <PageShell>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-6">
         <div>
-          <Link href="/" className="text-sm text-neutral-600">
-            Back to library
-          </Link>
+          <GhostLink href="/">標本棚へ戻る</GhostLink>
           <p className="mt-4 text-sm font-medium tracking-wide text-neutral-500">
-            Seed Detail
+            綿毛の詳細
           </p>
           <h1 className="mt-2 text-3xl font-semibold text-neutral-950">
             {seed.title}
@@ -198,53 +210,52 @@ export function SeedDetailClient({
         <div className="flex gap-2">
           <button
             type="button"
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium"
+            className={`${buttonClass} border border-neutral-300 bg-white text-neutral-800 hover:border-neutral-500 hover:bg-neutral-50`}
             onClick={() => setEditing((current) => !current)}
           >
-            {editing ? "Cancel Edit" : "Edit"}
+            {editing ? "編集をやめる" : "編集"}
           </button>
           <button
             type="button"
-            className="rounded-md bg-neutral-950 px-4 py-2 text-sm font-medium text-white"
+            className={`${buttonClass} bg-neutral-950 text-white hover:bg-neutral-800`}
             onClick={handleCopyMarkdown}
           >
-            Copy Markdown
+            Markdownをコピー
           </button>
         </div>
       </div>
 
       <Surface tone="note" className="mt-6 text-sm leading-6">
-        AI生成物・保存カードは未検証です。事実、助言、結論として扱わず、
-        人間が見返し、編集し、育てるための仮説メモとして使ってください。
+        AI生成物・保存カードは未検証です。事実・助言・結論として扱わず、人間が見返し、編集し、育てるための仮説メモとして使ってください。
       </Surface>
 
       {copyState === "copied" ? (
-        <p className="mt-3 text-sm text-emerald-700">Copied markdown.</p>
+        <p className="mt-3 text-sm text-emerald-700">Markdownをコピーしました。</p>
       ) : null}
       {copyState === "failed" ? (
         <p className="mt-3 text-sm text-red-700">
-          Clipboard copy failed. Select the Markdown preview manually.
+          クリップボードへのコピーに失敗しました。
         </p>
       ) : null}
       {saveState === "saved" ? (
         <p className="mt-3 text-sm text-emerald-700">
-          Saved to this browser.
+          このブラウザに保存しました。
         </p>
       ) : null}
       {saveState === "failed" ? (
-        <p className="mt-3 text-sm text-red-700">Local save failed.</p>
+        <p className="mt-3 text-sm text-red-700">ローカル保存に失敗しました。</p>
       ) : null}
 
       {editing ? (
         <Surface className="mt-6">
           <h2 className="text-lg font-semibold text-neutral-950">
-            Edit seed
+            綿毛を育てる
           </h2>
           <div className="mt-5 grid gap-4">
             <label className="block">
-              <span className="text-sm font-medium text-neutral-700">Title</span>
+              <FieldLabel>タイトル</FieldLabel>
               <input
-                className="mt-1 w-full rounded-md border border-neutral-300 p-3 text-sm"
+                className={inputClass}
                 value={fields.title}
                 onChange={(event) =>
                   setFields((current) => ({
@@ -256,11 +267,9 @@ export function SeedDetailClient({
             </label>
 
             <label className="block">
-              <span className="text-sm font-medium text-neutral-700">
-                Summary
-              </span>
+              <FieldLabel>要約</FieldLabel>
               <textarea
-                className="mt-1 min-h-24 w-full rounded-md border border-neutral-300 p-3 text-sm leading-6"
+                className={`${inputClass} min-h-24 leading-6`}
                 value={fields.summary}
                 onChange={(event) =>
                   setFields((current) => ({
@@ -272,11 +281,9 @@ export function SeedDetailClient({
             </label>
 
             <label className="block">
-              <span className="text-sm font-medium text-neutral-700">
-                Body Markdown
-              </span>
+              <FieldLabel>本文Markdown</FieldLabel>
               <textarea
-                className="mt-1 min-h-56 w-full rounded-md border border-neutral-300 p-3 font-mono text-sm leading-6"
+                className={`${inputClass} min-h-56 font-mono leading-6`}
                 value={fields.bodyMarkdown}
                 onChange={(event) =>
                   setFields((current) => ({
@@ -289,11 +296,9 @@ export function SeedDetailClient({
 
             <div className="grid gap-4 md:grid-cols-2">
               <label className="block">
-                <span className="text-sm font-medium text-neutral-700">
-                  Tags
-                </span>
+                <FieldLabel>タグ</FieldLabel>
                 <input
-                  className="mt-1 w-full rounded-md border border-neutral-300 p-3 text-sm"
+                  className={inputClass}
                   value={fields.tags}
                   onChange={(event) =>
                     setFields((current) => ({
@@ -305,11 +310,9 @@ export function SeedDetailClient({
               </label>
 
               <label className="block">
-                <span className="text-sm font-medium text-neutral-700">
-                  Fluff Level
-                </span>
+                <FieldLabel>綿毛レベル</FieldLabel>
                 <select
-                  className="mt-1 w-full rounded-md border border-neutral-300 p-3 text-sm"
+                  className={inputClass}
                   value={fields.fluffLevel}
                   onChange={(event) =>
                     setFields((current) => ({
@@ -320,7 +323,7 @@ export function SeedDetailClient({
                 >
                   {[1, 2, 3, 4, 5].map((level) => (
                     <option key={level} value={level}>
-                      Fluff {level}
+                      綿毛レベル {level}
                     </option>
                   ))}
                 </select>
@@ -328,11 +331,9 @@ export function SeedDetailClient({
             </div>
 
             <label className="block">
-              <span className="text-sm font-medium text-neutral-700">
-                Risk Notes
-              </span>
+              <FieldLabel>注意メモ</FieldLabel>
               <textarea
-                className="mt-1 min-h-24 w-full rounded-md border border-neutral-300 p-3 text-sm leading-6"
+                className={`${inputClass} min-h-24 leading-6`}
                 value={fields.riskNotes}
                 onChange={(event) =>
                   setFields((current) => ({
@@ -344,11 +345,9 @@ export function SeedDetailClient({
             </label>
 
             <label className="block">
-              <span className="text-sm font-medium text-neutral-700">
-                Next Actions
-              </span>
+              <FieldLabel>次の観察</FieldLabel>
               <textarea
-                className="mt-1 min-h-24 w-full rounded-md border border-neutral-300 p-3 text-sm leading-6"
+                className={`${inputClass} min-h-24 leading-6`}
                 value={fields.nextActions}
                 onChange={(event) =>
                   setFields((current) => ({
@@ -361,10 +360,10 @@ export function SeedDetailClient({
 
             <button
               type="button"
-              className="w-fit rounded-md bg-neutral-950 px-5 py-3 text-sm font-medium text-white"
+              className={`${buttonClass} w-fit bg-neutral-950 px-5 py-3 text-white hover:bg-neutral-800`}
               onClick={handleSaveEdit}
             >
-              Save Edited Seed
+              編集を保存
             </button>
           </div>
         </Surface>
@@ -374,10 +373,10 @@ export function SeedDetailClient({
         <Surface>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-md bg-neutral-100 px-2 py-1 font-medium text-neutral-700">
-              {seed.type}
+              {typeLabels[seed.type]}
             </span>
             <span className="rounded-md border border-neutral-200 px-2 py-1 text-neutral-700">
-              Fluff {seed.fluffLevel}
+              綿毛レベル {seed.fluffLevel}
             </span>
           </div>
 
@@ -387,14 +386,14 @@ export function SeedDetailClient({
 
           {seed.sourceUrl ? (
             <p className="mt-4 text-sm text-neutral-600">
-              Source:{" "}
+              出典:{" "}
               <a
-                className="underline"
+                className="rounded-sm underline transition hover:text-neutral-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2"
                 href={seed.sourceUrl}
                 rel="noreferrer"
                 target="_blank"
               >
-                {seed.sourceUrl}
+                {seed.sourceTitle || seed.sourceUrl}
               </a>
             </p>
           ) : null}
@@ -403,7 +402,7 @@ export function SeedDetailClient({
             {seed.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-md border border-neutral-200 px-2 py-1 text-xs text-neutral-600"
+                className="rounded-sm border border-neutral-200 bg-[#fbfaf5] px-2 py-1 text-[11px] tracking-wide text-neutral-500"
               >
                 #{tag}
               </span>
@@ -413,7 +412,7 @@ export function SeedDetailClient({
           <RiskNotes seed={seed} />
 
           <section className="mt-6">
-            <h2 className="text-lg font-semibold text-neutral-950">Body</h2>
+            <h2 className="text-lg font-semibold text-neutral-950">本文</h2>
             <div className="mt-3 whitespace-pre-wrap rounded-md bg-neutral-50 p-4 text-sm leading-7 text-neutral-800">
               {seed.bodyMarkdown}
             </div>
@@ -421,7 +420,7 @@ export function SeedDetailClient({
 
           <section className="mt-6">
             <h2 className="text-lg font-semibold text-neutral-950">
-              Next Actions
+              次の観察
             </h2>
             <ul className="mt-3 space-y-2 text-sm text-neutral-700">
               {seed.nextActions.map((action) => (
@@ -433,7 +432,7 @@ export function SeedDetailClient({
 
         <Surface>
           <h2 className="text-lg font-semibold text-neutral-950">
-            Markdown preview
+            Markdownプレビュー
           </h2>
           <pre className="mt-4 max-h-[640px] overflow-auto whitespace-pre-wrap rounded-md bg-neutral-950 p-4 text-xs leading-5 text-neutral-100">
             {markdown}

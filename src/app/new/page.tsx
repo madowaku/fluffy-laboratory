@@ -2,7 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { SeedCard } from "@/components/SeedCard";
-import { PageHeader, PageShell, Surface } from "@/components/Workbench";
+import {
+  EmptyState,
+  FieldLabel,
+  PageHeader,
+  PageShell,
+  Surface
+} from "@/components/Workbench";
 import { seedToMarkdown } from "@/lib/export/markdown";
 import { createLLMProvider } from "@/lib/llm/factory";
 import {
@@ -14,11 +20,11 @@ import {
 import type { GeneratedCard, Seed, SeedType } from "@/types/seed";
 
 const seedTypeOptions: Array<{ value: SeedType; label: string }> = [
-  { value: "hypothesis", label: "Hypothesis Card" },
-  { value: "future_work_quest", label: "Future Work Quest" },
-  { value: "puzzle_seed", label: "Puzzle Seed" },
-  { value: "observation", label: "Observation Card" },
-  { value: "note", label: "Note" }
+  { value: "hypothesis", label: "仮説カード" },
+  { value: "future_work_quest", label: "未回収課題" },
+  { value: "puzzle_seed", label: "パズルの種" },
+  { value: "observation", label: "観察カード" },
+  { value: "note", label: "メモ" }
 ];
 
 function parseTags(value: string) {
@@ -79,7 +85,7 @@ export default function NewSeedPage() {
       setGenerateError(
         error instanceof Error
           ? error.message
-          : "Failed to generate a seed card."
+          : "Seed Card案の生成に失敗しました。"
       );
     }
   }
@@ -116,22 +122,25 @@ export default function NewSeedPage() {
     }
   }
 
+  const inputClass =
+    "mt-2 w-full rounded-md border border-neutral-300 p-3 text-sm outline-none transition focus:border-neutral-700 focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f7f2]";
+  const buttonClass =
+    "rounded-md px-4 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f7f7f2]";
+
   return (
     <PageShell>
       <PageHeader
-        eyebrow="New Fluff"
+        eyebrow="綿毛を拾う"
         title="綿毛を拾う"
-        description="メモ、URL、論文末尾の疑問、日常の違和感を、まだ柔らかいSeed cardとして仮置きします。現在はprovider factory経由のMock AIだけを使い、外部AI APIは呼びません。"
+        description="メモ、URL、論文の端、日常の違和感を、まだ柔らかいSeed Card案として仮置きします。現在はMock AIだけを使い、外部AI APIは呼びません。"
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <form className="space-y-5 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
           <label className="block">
-            <span className="text-sm font-medium text-neutral-800">
-              入力本文
-            </span>
+            <FieldLabel>入力本文</FieldLabel>
             <textarea
-              className="mt-2 min-h-48 w-full rounded-md border border-neutral-300 p-3 text-sm leading-6 outline-none focus:border-neutral-700"
+              className={`${inputClass} min-h-48 leading-6`}
               placeholder="研究になる前の問い、観察、論文メモなど"
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -139,11 +148,9 @@ export default function NewSeedPage() {
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-neutral-800">
-              カード種別
-            </span>
+            <FieldLabel>カード種別</FieldLabel>
             <select
-              className="mt-2 w-full rounded-md border border-neutral-300 p-3 text-sm outline-none focus:border-neutral-700"
+              className={inputClass}
               value={cardType}
               onChange={(event) => setCardType(event.target.value as SeedType)}
             >
@@ -156,11 +163,9 @@ export default function NewSeedPage() {
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-neutral-800">
-              sourceUrl
-            </span>
+            <FieldLabel>sourceUrl</FieldLabel>
             <input
-              className="mt-2 w-full rounded-md border border-neutral-300 p-3 text-sm outline-none focus:border-neutral-700"
+              className={inputClass}
               placeholder="https://example.com/paper-or-note"
               value={sourceUrl}
               onChange={(event) => setSourceUrl(event.target.value)}
@@ -168,22 +173,20 @@ export default function NewSeedPage() {
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-neutral-800">tags</span>
+            <FieldLabel>tags</FieldLabel>
             <input
-              className="mt-2 w-full rounded-md border border-neutral-300 p-3 text-sm outline-none focus:border-neutral-700"
-              placeholder="math, puzzle, medical"
+              className={inputClass}
+              placeholder="math, puzzle, 医療"
               value={tags}
               onChange={(event) => setTags(event.target.value)}
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-neutral-800">
-              additionalInstruction
-            </span>
+            <FieldLabel>additionalInstruction</FieldLabel>
             <input
-              className="mt-2 w-full rounded-md border border-neutral-300 p-3 text-sm outline-none focus:border-neutral-700"
-              placeholder="Keep it practical, make the risk note explicit..."
+              className={inputClass}
+              placeholder="注意メモを明示する、短くする、反例を探す..."
               value={additionalInstruction}
               onChange={(event) => setAdditionalInstruction(event.target.value)}
             />
@@ -191,10 +194,10 @@ export default function NewSeedPage() {
 
           <button
             type="button"
-            className="rounded-md bg-neutral-950 px-5 py-3 text-sm font-medium text-white"
+            className={`${buttonClass} bg-neutral-950 px-5 py-3 text-white hover:bg-neutral-800`}
             onClick={handleGenerate}
           >
-            Generate with Mock AI
+            Mock AIで生成
           </button>
 
           {generateError ? (
@@ -206,44 +209,43 @@ export default function NewSeedPage() {
 
         <aside className="space-y-4">
           <Surface tone="note" className="text-sm leading-6">
-            AI生成物は未検証の下書きです。事実、助言、結論として扱わず、
-            人間が観察し直すための仮説メモとして使ってください。
+            AI生成物は未検証の下書きです。事実・助言・結論として扱わず、人間が観察し直すための仮説メモとして使ってください。
           </Surface>
 
           {preview ? (
             <>
               <SeedCard seed={preview} />
-              <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
+              <Surface>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold text-neutral-900">
-                    Markdown Preview
+                    Markdownプレビュー
                   </h2>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      className="rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-800"
+                      className={`${buttonClass} border border-neutral-300 bg-white text-xs text-neutral-800 hover:border-neutral-500 hover:bg-neutral-50`}
                       onClick={handleSaveLocal}
                     >
-                      Save Local
+                      ローカル保存
                     </button>
                     <button
                       type="button"
-                      className="rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-800"
+                      className={`${buttonClass} border border-neutral-300 bg-white text-xs text-neutral-800 hover:border-neutral-500 hover:bg-neutral-50`}
                       onClick={handleCopyMarkdown}
                     >
-                      Copy Markdown
+                      Markdownをコピー
                     </button>
                   </div>
                 </div>
 
                 {saveState === "saved" ? (
                   <p className="mt-2 text-xs text-emerald-700">
-                    Saved to this browser.
+                    このブラウザに保存しました。
                   </p>
                 ) : null}
                 {saveState === "failed" ? (
                   <p className="mt-2 text-xs text-red-700">
-                    Local save failed. The preview is still available below.
+                    ローカル保存に失敗しました。プレビューは下に残っています。
                   </p>
                 ) : null}
                 {copyState === "copied" ? (
@@ -251,19 +253,19 @@ export default function NewSeedPage() {
                 ) : null}
                 {copyState === "failed" ? (
                   <p className="mt-2 text-xs text-red-700">
-                    Clipboard copy failed. Select the preview text manually.
+                    クリップボードへのコピーに失敗しました。
                   </p>
                 ) : null}
 
                 <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-md bg-neutral-950 p-3 text-xs leading-5 text-neutral-100">
                   {previewMarkdown}
                 </pre>
-              </div>
+              </Surface>
             </>
           ) : (
-            <div className="rounded-lg border border-dashed border-neutral-300 p-6 text-sm leading-6 text-neutral-600">
-              生成すると、ここにSeed cardとMarkdownが表示されます。
-            </div>
+            <EmptyState title="ここに仮説の綿毛が表示されます">
+              入力してGenerateすると、Seed Card案が作られます。AI生成物は未検証のため、観察用の下書きとして扱ってください。
+            </EmptyState>
           )}
         </aside>
       </div>

@@ -7,15 +7,19 @@ export function RiskNotes({ seed }: { seed: Pick<Seed, "tags" | "riskNotes"> }) 
 
   return (
     <section
-      className={`mt-4 rounded-md border p-3 text-xs leading-5 ${
+      className={`mt-4 rounded-md border p-3 text-[11px] leading-5 ${
         highRisk
-          ? "border-red-200 bg-red-50 text-red-950"
-          : "border-amber-200 bg-amber-50 text-amber-950"
+          ? "border-red-300 bg-red-50 text-red-950 shadow-sm"
+          : "border-neutral-200 bg-neutral-50 text-neutral-600"
       }`}
-      aria-label="Risk notes"
+      aria-label="注意メモ"
     >
-      <p className="font-semibold">
-        {highRisk ? "High-risk warning" : "Risk notes"}
+      <p
+        className={`font-semibold ${
+          highRisk ? "text-red-950" : "text-neutral-700"
+        }`}
+      >
+        {highRisk ? "高リスク注意" : "注意メモ"}
       </p>
       <ul className="mt-2 space-y-1">
         {warnings.map((warning) => (

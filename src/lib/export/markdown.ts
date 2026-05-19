@@ -13,7 +13,7 @@ export function seedToMarkdown(seed: Seed): string {
   return `# ${seed.title}
 
 Type: ${seed.type}
-Fluff Level: ${seed.fluffLevel}
+綿毛レベル: ${seed.fluffLevel}
 Tags: ${tags}
 Updated: ${seed.updatedAt}
 ${source}
@@ -25,11 +25,11 @@ ${seed.summary}
 
 ${seed.bodyMarkdown}
 
-## Risk Notes
+## 注意メモ
 
 ${listItems(
     seed.riskNotes,
-    "This seed is unverified and should be treated as a thinking prompt."
+    "この綿毛は未検証です。思考のきっかけとして扱ってください。"
   )}
 
 ## Next Actions

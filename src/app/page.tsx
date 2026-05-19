@@ -14,13 +14,13 @@ export default function HomePage() {
   return (
     <PageShell>
       <PageHeader
-        eyebrow="Fluffy Laboratory"
+        eyebrow="未定形研究室"
         title="Fluffy Laboratory / 未定形研究室"
-        description="研究になる前の問い、論文末尾の未回収課題、日常の違和感を、仮説の綿毛として集める小さな研究室です。"
+        description="研究になる前の問い、論文末尾の未回収課題、日常の違和感を、仮説の綿毛として集める小さな研究ノートです。"
         actions={
           <>
-            <PrimaryLink href="/new">New Fluff</PrimaryLink>
-            <SecondaryLink href="/prompts">Prompt Studio</SecondaryLink>
+            <PrimaryLink href="/new">綿毛を拾う</PrimaryLink>
+            <SecondaryLink href="/prompts">プロンプト温室</SecondaryLink>
           </>
         }
       />
