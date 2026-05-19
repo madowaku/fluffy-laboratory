@@ -37,3 +37,8 @@ ${listItems(
 ${listItems(seed.nextActions, "Add one small next action.")}
 `;
 }
+
+export function seedsToMarkdown(seeds: Seed[]): string {
+  return seeds.map((seed) => seedToMarkdown(seed)).join("\n---\n\n");
+}
+

@@ -1,3 +1,4 @@
+import { GoogleLLMProvider } from "./google-provider";
 import { MockLLMProvider } from "./mock-provider";
 import type { LLMProvider } from "./provider";
 
@@ -21,7 +22,7 @@ export function createLLMProvider(
   }
 
   if (normalized === "google") {
-    throw new Error("Google LLM provider is not implemented yet.");
+    return new GoogleLLMProvider();
   }
 
   throw new Error(`Unknown LLM provider: ${providerName}`);

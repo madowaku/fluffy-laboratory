@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { SeedCard } from "@/components/SeedCard";
 import {
   EmptyState,
@@ -10,13 +11,14 @@ import {
   Surface
 } from "@/components/Workbench";
 import { seedToMarkdown } from "@/lib/export/markdown";
-import { createLLMProvider } from "@/lib/llm/factory";
 import {
   mergeStoredSeed,
   parseStoredSeeds,
   savedSeedsStorageKey,
   serializeStoredSeeds
 } from "@/lib/seeds/storage";
+import { parseStoredSources, sourcesStorageKey } from "@/lib/sources/storage";
+import { parseCardTypeQuery } from "@/lib/seeds/query";
 import type { GeneratedCard, Seed, SeedType } from "@/types/seed";
 
 const seedTypeOptions: Array<{ value: SeedType; label: string }> = [
@@ -46,7 +48,12 @@ function toPreviewSeed(card: GeneratedCard): Seed {
   };
 }
 
-export default function NewSeedPage() {
+function NewSeedPageContent() {
+  const searchParams = useSearchParams();
+  const sourceId = searchParams.get("sourceId");
+  const cardTypeParam = searchParams.get("cardType");
+  const additionalInstructionParam = searchParams.get("additionalInstruction");
+
   const [input, setInput] = useState("");
   const [cardType, setCardType] = useState<SeedType>("hypothesis");
   const [sourceUrl, setSourceUrl] = useState("");
@@ -54,12 +61,61 @@ export default function NewSeedPage() {
   const [additionalInstruction, setAdditionalInstruction] = useState("");
   const [preview, setPreview] = useState<Seed | null>(null);
   const [generateError, setGenerateError] = useState("");
+  const [sourceWarning, setSourceWarning] = useState("");
+  const [loadedSourceTitle, setLoadedSourceTitle] = useState("");
+  const [loadedSourceUrl, setLoadedSourceUrl] = useState("");
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
     "idle"
   );
   const [saveState, setSaveState] = useState<"idle" | "saved" | "failed">(
     "idle"
   );
+  const [provider, setProvider] = useState<string>("unknown");
+
+  useEffect(() => {
+    fetch("/api/provider-status")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.provider) {
+          setProvider(data.provider);
+        }
+      })
+      .catch(() => setProvider("unknown"));
+  }, []);
+
+  useEffect(() => {
+    if (cardTypeParam) {
+      setCardType(parseCardTypeQuery(cardTypeParam));
+    }
+    if (additionalInstructionParam) {
+      setAdditionalInstruction(additionalInstructionParam);
+    }
+  }, [cardTypeParam, additionalInstructionParam]);
+
+  useEffect(() => {
+    if (sourceId) {
+      const storedSources = parseStoredSources(localStorage.getItem(sourcesStorageKey));
+      const source = storedSources.find((s) => s.id === sourceId);
+      if (source) {
+        setInput(source.noteMarkdown);
+        if (source.sourceUrl) {
+          setSourceUrl(source.sourceUrl);
+          setLoadedSourceUrl(source.sourceUrl);
+        } else {
+          setLoadedSourceUrl("");
+        }
+        if (source.tags.length > 0) {
+          setTags(source.tags.join(", "));
+        }
+        setLoadedSourceTitle(source.title);
+        setSourceWarning("");
+      } else {
+        setSourceWarning("素材が見つかりませんでした。手動入力で綿毛を作れます。");
+        setLoadedSourceTitle("");
+        setLoadedSourceUrl("");
+      }
+    }
+  }, [sourceId]);
 
   const previewMarkdown = useMemo(
     () => (preview ? seedToMarkdown(preview) : ""),
@@ -68,16 +124,45 @@ export default function NewSeedPage() {
 
   async function handleGenerate() {
     try {
-      const provider = createLLMProvider();
-      const generated = await provider.generateCard({
-        input,
-        cardType,
-        sourceUrl,
-        tags: parseTags(tags),
-        additionalInstruction
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          input,
+          cardType,
+          sourceUrl: sourceUrl.trim() || undefined,
+          tags: parseTags(tags),
+          additionalInstruction: additionalInstruction.trim() || undefined
+        })
       });
 
-      setPreview(toPreviewSeed(generated));
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMsg = data.error || "Seed Card案の生成に失敗しました。";
+        const category = data.category;
+        let jpError = errorMsg;
+
+        if (category === "MISSING_API_KEY") {
+          jpError = "APIキーが設定されていません。";
+        } else if (category === "VALIDATION_ERROR") {
+          jpError = "入力が長すぎます。または入力が不正です。";
+        } else if (category === "RATE_LIMITED") {
+          jpError = "リクエストが多すぎます。しばらく待ってから再試行してください。";
+        } else if (category === "SAFETY_BLOCKED") {
+          jpError = "安全性の問題によりブロックされました。";
+        } else if (category === "INVALID_JSON") {
+          jpError = "AIからの応答が不正な形式でした。再試行してください。";
+        } else if (category === "PROVIDER_UNAVAILABLE") {
+          jpError = "AIプロバイダが現在利用できません。";
+        }
+
+        throw new Error(jpError);
+      }
+
+      setPreview(toPreviewSeed(data.card));
       setGenerateError("");
       setCopyState("idle");
       setSaveState("idle");
@@ -132,11 +217,44 @@ export default function NewSeedPage() {
       <PageHeader
         eyebrow="綿毛を拾う"
         title="綿毛を拾う"
-        description="メモ、URL、論文の端、日常の違和感を、まだ柔らかいSeed Card案として仮置きします。現在はMock AIだけを使い、外部AI APIは呼びません。"
+        description="入力されたメモを、設定中のAI providerでSeed Card案にします。生成物は未検証です。"
+        actions={
+          <Link
+            href="/sources"
+            className="rounded-md border border-neutral-300 bg-white px-5 py-3 text-sm font-medium text-neutral-800 transition hover:border-neutral-500 hover:bg-neutral-50"
+          >
+            素材箱に行く
+          </Link>
+        }
       />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <form className="space-y-5 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
+          {sourceWarning ? (
+            <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 font-medium">
+              {sourceWarning}
+            </p>
+          ) : null}
+
+          {loadedSourceTitle ? (
+            <div className="rounded-md border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-700 space-y-1">
+              <div>
+                <span className="font-semibold text-neutral-900">素材箱から読み込みました:</span> {loadedSourceTitle}
+              </div>
+              {cardTypeParam && (
+                <div>
+                  <span className="font-semibold text-neutral-900">カード種別:</span>{" "}
+                  {seedTypeOptions.find((o) => o.value === parseCardTypeQuery(cardTypeParam))?.label || cardTypeParam}
+                </div>
+              )}
+              {loadedSourceUrl && (
+                <div className="font-mono text-[10px] text-neutral-500 truncate">
+                  Source URL: {loadedSourceUrl}
+                </div>
+              )}
+            </div>
+          ) : null}
+
           <label className="block">
             <FieldLabel>入力本文</FieldLabel>
             <textarea
@@ -197,7 +315,7 @@ export default function NewSeedPage() {
             className={`${buttonClass} bg-neutral-950 px-5 py-3 text-white hover:bg-neutral-800`}
             onClick={handleGenerate}
           >
-            Mock AIで生成
+            {provider === "mock" ? "Mock AIで生成" : provider === "google" ? "Geminiで綿毛化" : "Seed Card案を生成"}
           </button>
 
           {generateError ? (
@@ -272,3 +390,14 @@ export default function NewSeedPage() {
     </PageShell>
   );
 }
+
+import Link from "next/link";
+
+export default function NewSeedPage() {
+  return (
+    <Suspense fallback={<PageShell><div className="text-center py-10">読み込み中...</div></PageShell>}>
+      <NewSeedPageContent />
+    </Suspense>
+  );
+}
+

@@ -20,6 +20,7 @@ export default function HomePage() {
         actions={
           <>
             <PrimaryLink href="/new">綿毛を拾う</PrimaryLink>
+            <SecondaryLink href="/sources">素材箱</SecondaryLink>
             <SecondaryLink href="/prompts">プロンプト温室</SecondaryLink>
           </>
         }

@@ -35,3 +35,49 @@ describe("seedToMarkdown", () => {
     expect(markdown).toContain("- Compare with three real conversations.");
   });
 });
+
+import { seedsToMarkdown } from "./markdown";
+
+describe("seedsToMarkdown", () => {
+  it("serializes multiple seeds joined by a horizontal rule", () => {
+    const seeds: Seed[] = [
+      {
+        id: "seed_1",
+        title: "Seed One",
+        type: "note",
+        summary: "Summary One",
+        bodyMarkdown: "Body One",
+        tags: [],
+        domains: [],
+        fluffLevel: 1,
+        riskNotes: [],
+        nextActions: [],
+        createdAt: "2026-05-19T00:00:00.000Z",
+        updatedAt: "2026-05-19T00:00:00.000Z",
+        archived: false,
+      },
+      {
+        id: "seed_2",
+        title: "Seed Two",
+        type: "observation",
+        summary: "Summary Two",
+        bodyMarkdown: "Body Two",
+        tags: [],
+        domains: [],
+        fluffLevel: 2,
+        riskNotes: [],
+        nextActions: [],
+        createdAt: "2026-05-19T00:00:00.000Z",
+        updatedAt: "2026-05-19T00:00:00.000Z",
+        archived: false,
+      },
+    ];
+
+    const markdown = seedsToMarkdown(seeds);
+    
+    expect(markdown).toContain("# Seed One");
+    expect(markdown).toContain("# Seed Two");
+    expect(markdown).toContain("\n---\n\n");
+  });
+});
+

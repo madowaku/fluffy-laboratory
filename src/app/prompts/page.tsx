@@ -13,11 +13,31 @@ import { buildPuzzleSeedPrompt } from "@/lib/prompts/puzzle-seed";
 const sampleInput = "{{input}}";
 
 const promptCards = [
-  { title: "Base Prompt", body: basePrompt },
-  { title: "Hypothesis", body: buildHypothesisPrompt(sampleInput) },
-  { title: "Future Work", body: buildFutureWorkPrompt(sampleInput) },
-  { title: "Puzzle Seed", body: buildPuzzleSeedPrompt(sampleInput) },
-  { title: "Observation", body: buildObservationPrompt(sampleInput) }
+  {
+    title: "Base Prompt",
+    description: "プロンプトの共通設計・出力フォーマット",
+    body: basePrompt
+  },
+  {
+    title: "Hypothesis",
+    description: "仮説カード生成用の個別プロンプト",
+    body: buildHypothesisPrompt(sampleInput)
+  },
+  {
+    title: "Future Work",
+    description: "論文末尾の課題（Limitations / Future Work / Open Questions）を、人間が取り組みやすいクエスト（未回収課題カード）に変換するためのプロンプト",
+    body: buildFutureWorkPrompt(sampleInput)
+  },
+  {
+    title: "Puzzle Seed",
+    description: "数学・論理・制約構造を、遊べるルール・盤面・クリア条件（遊べる問い）へ変換するためのプロンプト。この素材にある構造を、遊べる問いに変換します。",
+    body: buildPuzzleSeedPrompt(sampleInput)
+  },
+  {
+    title: "Observation",
+    description: "観察カード（主観のバイアスを削ぎ落とした事実）を抽出するための個別プロンプト",
+    body: buildObservationPrompt(sampleInput)
+  }
 ];
 
 export default function PromptStudioPage() {
@@ -33,6 +53,7 @@ export default function PromptStudioPage() {
         {promptCards.map((prompt) => (
           <Surface key={prompt.title}>
             <SectionTitle>{prompt.title}</SectionTitle>
+            <p className="mt-2 text-xs text-neutral-500">{prompt.description}</p>
             <pre className="mt-4 max-h-80 overflow-auto whitespace-pre-wrap rounded-md bg-neutral-950 p-4 text-sm leading-6 text-neutral-100">
               {prompt.body}
             </pre>
