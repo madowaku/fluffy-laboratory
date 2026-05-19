@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { RiskNotes } from "@/components/RiskNotes";
+import { PageShell, Surface } from "@/components/Workbench";
 import { seedToMarkdown } from "@/lib/export/markdown";
 import {
   findSeedById,
@@ -181,7 +182,7 @@ export function SeedDetailClient({
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <PageShell>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-6">
         <div>
           <Link href="/" className="text-sm text-neutral-600">
@@ -212,10 +213,10 @@ export function SeedDetailClient({
         </div>
       </div>
 
-      <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+      <Surface tone="note" className="mt-6 text-sm leading-6">
         AI生成物・保存カードは未検証です。事実、助言、結論として扱わず、
         人間が見返し、編集し、育てるための仮説メモとして使ってください。
-      </div>
+      </Surface>
 
       {copyState === "copied" ? (
         <p className="mt-3 text-sm text-emerald-700">Copied markdown.</p>
@@ -235,7 +236,7 @@ export function SeedDetailClient({
       ) : null}
 
       {editing ? (
-        <section className="mt-6 rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <Surface className="mt-6">
           <h2 className="text-lg font-semibold text-neutral-950">
             Edit seed
           </h2>
@@ -366,11 +367,11 @@ export function SeedDetailClient({
               Save Edited Seed
             </button>
           </div>
-        </section>
+        </Surface>
       ) : null}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-        <section className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <Surface>
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="rounded-md bg-neutral-100 px-2 py-1 font-medium text-neutral-700">
               {seed.type}
@@ -428,17 +429,17 @@ export function SeedDetailClient({
               ))}
             </ul>
           </section>
-        </section>
+        </Surface>
 
-        <aside className="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <Surface>
           <h2 className="text-lg font-semibold text-neutral-950">
             Markdown preview
           </h2>
           <pre className="mt-4 max-h-[640px] overflow-auto whitespace-pre-wrap rounded-md bg-neutral-950 p-4 text-xs leading-5 text-neutral-100">
             {markdown}
           </pre>
-        </aside>
+        </Surface>
       </div>
-    </main>
+    </PageShell>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { SeedCard } from "@/components/SeedCard";
+import { PageHeader, PageShell, Surface } from "@/components/Workbench";
 import { seedToMarkdown } from "@/lib/export/markdown";
 import { createLLMProvider } from "@/lib/llm/factory";
 import {
@@ -116,20 +117,12 @@ export default function NewSeedPage() {
   }
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
-      <section className="border-b border-neutral-200 pb-8">
-        <p className="text-sm font-medium tracking-wide text-neutral-500">
-          New Fluff
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold text-neutral-950">
-          綿毛を拾う
-        </h1>
-        <p className="mt-4 max-w-2xl leading-8 text-neutral-700">
-          メモ、URL、論文末尾の疑問、日常の違和感を、まだ柔らかい
-          Seed cardとして仮置きします。現在はprovider factory経由のMock
-          AIだけを使い、外部AI APIは呼びません。
-        </p>
-      </section>
+    <PageShell>
+      <PageHeader
+        eyebrow="New Fluff"
+        title="綿毛を拾う"
+        description="メモ、URL、論文末尾の疑問、日常の違和感を、まだ柔らかいSeed cardとして仮置きします。現在はprovider factory経由のMock AIだけを使い、外部AI APIは呼びません。"
+      />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <form className="space-y-5 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
@@ -212,10 +205,10 @@ export default function NewSeedPage() {
         </form>
 
         <aside className="space-y-4">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+          <Surface tone="note" className="text-sm leading-6">
             AI生成物は未検証の下書きです。事実、助言、結論として扱わず、
             人間が観察し直すための仮説メモとして使ってください。
-          </div>
+          </Surface>
 
           {preview ? (
             <>
@@ -274,6 +267,6 @@ export default function NewSeedPage() {
           )}
         </aside>
       </div>
-    </main>
+    </PageShell>
   );
 }
