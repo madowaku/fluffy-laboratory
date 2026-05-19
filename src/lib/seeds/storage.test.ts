@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  findSeedById,
   mergeStoredSeed,
   parseStoredSeeds,
-  serializeStoredSeeds
+  serializeStoredSeeds,
+  updateStoredSeed
 } from "./storage";
 import type { Seed } from "@/types/seed";
 
@@ -38,5 +40,28 @@ describe("stored seed helpers", () => {
     const updatedSeed = { ...storedSeed, title: "Updated" };
 
     expect(mergeStoredSeed([storedSeed], updatedSeed)).toEqual([updatedSeed]);
+  });
+
+  it("finds a seed by id with stored seeds taking priority", () => {
+    expect(
+      findSeedById(
+        [{ ...storedSeed, title: "Stored Version" }],
+        [{ ...storedSeed, title: "Mock Version" }],
+        "saved"
+      )?.title
+    ).toBe("Stored Version");
+  });
+
+  it("updates a saved seed and refreshes updatedAt", () => {
+    const updated = updateStoredSeed([storedSeed], "saved", {
+      title: "Grown Seed",
+      tags: ["edited"]
+    });
+
+    expect(updated[0].title).toBe("Grown Seed");
+    expect(updated[0].tags).toEqual(["edited"]);
+    expect(new Date(updated[0].updatedAt).getTime()).toBeGreaterThan(
+      new Date(storedSeed.updatedAt).getTime()
+    );
   });
 });

@@ -26,7 +26,11 @@ describe("seedToMarkdown", () => {
 
     expect(markdown).toContain("# Gentle Friction");
     expect(markdown).toContain("Type: hypothesis");
+    expect(markdown).toContain("Fluff Level: 3");
+    expect(markdown).toContain("Tags: questions, workflow");
     expect(markdown).toContain("Source: https://example.com/note");
+    expect(markdown).toContain("A small pause can improve the quality");
+    expect(markdown).toContain("## Observation");
     expect(markdown).toContain("- Unverified hypothesis.");
     expect(markdown).toContain("- Compare with three real conversations.");
   });

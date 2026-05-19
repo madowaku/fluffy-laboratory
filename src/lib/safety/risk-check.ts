@@ -4,7 +4,11 @@ export const highRiskTags = [
   "medical",
   "legal",
   "finance",
-  "mental-health"
+  "mental-health",
+  "医療",
+  "法律",
+  "投資",
+  "メンタルヘルス"
 ] as const;
 
 const highRiskTagSet = new Set<string>(highRiskTags);

@@ -22,3 +22,32 @@ export function serializeStoredSeeds(seeds: Seed[]): string {
 export function mergeStoredSeed(seeds: Seed[], seed: Seed): Seed[] {
   return [seed, ...seeds.filter((item) => item.id !== seed.id)];
 }
+
+export function findSeedById(
+  storedSeeds: Seed[],
+  initialSeeds: Seed[],
+  id: string
+): Seed | undefined {
+  return (
+    storedSeeds.find((seed) => seed.id === id) ??
+    initialSeeds.find((seed) => seed.id === id)
+  );
+}
+
+export function updateStoredSeed(
+  seeds: Seed[],
+  id: string,
+  changes: Partial<Seed>
+): Seed[] {
+  return seeds.map((seed) =>
+    seed.id === id
+      ? {
+          ...seed,
+          ...changes,
+          id: seed.id,
+          createdAt: seed.createdAt,
+          updatedAt: new Date().toISOString()
+        }
+      : seed
+  );
+}

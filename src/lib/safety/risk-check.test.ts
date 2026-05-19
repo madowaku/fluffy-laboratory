@@ -11,6 +11,15 @@ describe("risk checks", () => {
     }
   });
 
+  it("adds a high-risk warning for Japanese high-risk tags", () => {
+    for (const tag of ["医療", "法律", "投資", "メンタルヘルス"]) {
+      expect(hasHighRiskTags([tag])).toBe(true);
+      expect(getRiskWarnings({ tags: [tag], riskNotes: [] }).join(" ")).toContain(
+        "high-risk"
+      );
+    }
+  });
+
   it("keeps a default unverified warning when risk notes are empty", () => {
     expect(getRiskWarnings({ tags: [], riskNotes: [] }).join(" ")).toContain(
       "unverified"

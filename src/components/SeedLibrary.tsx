@@ -39,10 +39,13 @@ export function SeedLibrary({ initialSeeds }: { initialSeeds: Seed[] }) {
     setStoredSeeds(parseStoredSeeds(localStorage.getItem(savedSeedsStorageKey)));
   }, []);
 
-  const seeds = useMemo(
-    () => [...storedSeeds, ...initialSeeds],
-    [initialSeeds, storedSeeds]
-  );
+  const seeds = useMemo(() => {
+    const storedIds = new Set(storedSeeds.map((seed) => seed.id));
+    return [
+      ...storedSeeds,
+      ...initialSeeds.filter((seed) => !storedIds.has(seed.id))
+    ];
+  }, [initialSeeds, storedSeeds]);
   const visibleSeeds = useMemo(() => filterSeeds(seeds, filters), [filters, seeds]);
 
   return (
