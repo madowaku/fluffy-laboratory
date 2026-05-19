@@ -4,6 +4,12 @@ import { useMemo, useState } from "react";
 import { SeedCard } from "@/components/SeedCard";
 import { seedToMarkdown } from "@/lib/export/markdown";
 import { mockLLMProvider } from "@/lib/llm/mock-provider";
+import {
+  mergeStoredSeed,
+  parseStoredSeeds,
+  savedSeedsStorageKey,
+  serializeStoredSeeds
+} from "@/lib/seeds/storage";
 import type { GeneratedCard, Seed, SeedType } from "@/types/seed";
 
 const seedTypeOptions: Array<{ value: SeedType; label: string }> = [
@@ -26,7 +32,7 @@ function toPreviewSeed(card: GeneratedCard): Seed {
 
   return {
     ...card,
-    id: "preview-seed",
+    id: `seed_${Date.now()}`,
     createdAt: now,
     updatedAt: now,
     archived: false
@@ -41,6 +47,9 @@ export default function NewSeedPage() {
   const [additionalInstruction, setAdditionalInstruction] = useState("");
   const [preview, setPreview] = useState<Seed | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">(
+    "idle"
+  );
+  const [saveState, setSaveState] = useState<"idle" | "saved" | "failed">(
     "idle"
   );
 
@@ -60,6 +69,26 @@ export default function NewSeedPage() {
 
     setPreview(toPreviewSeed(generated));
     setCopyState("idle");
+    setSaveState("idle");
+  }
+
+  function handleSaveLocal() {
+    if (!preview) {
+      return;
+    }
+
+    try {
+      const savedSeeds = parseStoredSeeds(
+        localStorage.getItem(savedSeedsStorageKey)
+      );
+      localStorage.setItem(
+        savedSeedsStorageKey,
+        serializeStoredSeeds(mergeStoredSeed(savedSeeds, preview))
+      );
+      setSaveState("saved");
+    } catch {
+      setSaveState("failed");
+    }
   }
 
   async function handleCopyMarkdown() {
@@ -86,7 +115,7 @@ export default function NewSeedPage() {
         </h1>
         <p className="mt-4 max-w-2xl leading-8 text-neutral-700">
           メモ、URL、論文末尾の疑問、日常の違和感を、まだ柔らかい
-          Seed cardとして仮置きします。Mock AIは保存も外部送信もしません。
+          Seed cardとして仮置きします。Mock AIは外部送信しません。
         </p>
       </section>
 
@@ -137,7 +166,7 @@ export default function NewSeedPage() {
             <span className="text-sm font-medium text-neutral-800">tags</span>
             <input
               className="mt-2 w-full rounded-md border border-neutral-300 p-3 text-sm outline-none focus:border-neutral-700"
-              placeholder="math, puzzle, observation"
+              placeholder="math, puzzle, medical"
               value={tags}
               onChange={(event) => setTags(event.target.value)}
             />
@@ -174,18 +203,38 @@ export default function NewSeedPage() {
             <>
               <SeedCard seed={preview} />
               <div className="rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 className="text-sm font-semibold text-neutral-900">
                     Markdown Preview
                   </h2>
-                  <button
-                    type="button"
-                    className="rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-800"
-                    onClick={handleCopyMarkdown}
-                  >
-                    Copy Markdown
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-800"
+                      onClick={handleSaveLocal}
+                    >
+                      Save Local
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border border-neutral-300 px-3 py-2 text-xs font-medium text-neutral-800"
+                      onClick={handleCopyMarkdown}
+                    >
+                      Copy Markdown
+                    </button>
+                  </div>
                 </div>
+
+                {saveState === "saved" ? (
+                  <p className="mt-2 text-xs text-emerald-700">
+                    Saved to this browser.
+                  </p>
+                ) : null}
+                {saveState === "failed" ? (
+                  <p className="mt-2 text-xs text-red-700">
+                    Local save failed. The preview is still available below.
+                  </p>
+                ) : null}
                 {copyState === "copied" ? (
                   <p className="mt-2 text-xs text-emerald-700">Copied.</p>
                 ) : null}
@@ -194,6 +243,7 @@ export default function NewSeedPage() {
                     Clipboard copy failed. Select the preview text manually.
                   </p>
                 ) : null}
+
                 <pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-md bg-neutral-950 p-3 text-xs leading-5 text-neutral-100">
                   {previewMarkdown}
                 </pre>

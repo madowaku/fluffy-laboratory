@@ -1,25 +1,32 @@
 import type { Seed } from "@/types/seed";
 
-const highRiskTags = new Set([
+export const highRiskTags = [
   "medical",
   "legal",
   "finance",
-  "mental-health",
-  "医療",
-  "法律",
-  "投資",
-  "メンタルヘルス"
-]);
+  "mental-health"
+] as const;
 
-export function getRiskWarnings(seed: Pick<Seed, "tags" | "riskNotes">): string[] {
-  const warnings = [...seed.riskNotes];
+const highRiskTagSet = new Set<string>(highRiskTags);
 
-  if (warnings.length === 0) {
-    warnings.push("このカードは未検証の仮説を含みます。確定した研究成果ではありません。");
-  }
+export function hasHighRiskTags(tags: string[]): boolean {
+  return tags.some((tag) => highRiskTagSet.has(tag.toLowerCase()));
+}
 
-  if (seed.tags.some((tag) => highRiskTags.has(tag))) {
-    warnings.push("高リスク領域を含むため、専門家確認なしに助言・診断・判断へ使わないでください。");
+export function getRiskWarnings(
+  seed: Pick<Seed, "tags" | "riskNotes">
+): string[] {
+  const warnings =
+    seed.riskNotes.length > 0
+      ? [...seed.riskNotes]
+      : [
+          "This seed is unverified. Treat it as a thinking prompt, not as established research."
+        ];
+
+  if (hasHighRiskTags(seed.tags)) {
+    warnings.push(
+      "This card includes high-risk tags. Do not use it as medical, legal, financial, or mental-health advice."
+    );
   }
 
   return warnings;

@@ -1,5 +1,6 @@
 import type { Seed } from "@/types/seed";
 import { FluffLevelBadge } from "./FluffLevelBadge";
+import { RiskNotes } from "./RiskNotes";
 
 const typeLabels: Record<Seed["type"], string> = {
   hypothesis: "Hypothesis",
@@ -46,6 +47,8 @@ export function SeedCard({ seed }: { seed: Seed }) {
       <p className="mt-4 text-xs text-neutral-500">
         Updated {formatDate(seed.updatedAt)}
       </p>
+
+      <RiskNotes seed={seed} />
     </article>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import seeds from "../../data/seeds.example.json";
-import { SeedCard } from "@/components/SeedCard";
+import { SeedLibrary } from "@/components/SeedLibrary";
 import type { Seed } from "@/types/seed";
 
 export default function HomePage() {
@@ -35,19 +35,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mt-10">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <h2 className="text-2xl font-semibold text-neutral-950">
-            Recent Seeds
-          </h2>
-          <p className="text-sm text-neutral-500">{recentSeeds.length} seeds</p>
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {recentSeeds.map((seed) => (
-            <SeedCard key={seed.id} seed={seed} />
-          ))}
-        </div>
-      </section>
+      <SeedLibrary initialSeeds={recentSeeds} />
     </main>
   );
 }
